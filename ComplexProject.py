@@ -13,7 +13,7 @@ from scipy.optimize import curve_fit as cf
 
 L = 16                  ##################
 P = 0.5                 #input parameters#
-RunTime = 70000         ##################
+RunTime = 100000        ##################
 
 SteadyState = False             #################
 slopes = np.zeros(L)            #initialisations#
@@ -110,21 +110,22 @@ def Run(L, relPeriods = 1000):
 '''
 Task 1
 '''
-u = []
-var = []
-for i in range(0,10):
-    Run(RunTime)
-    u.append(sum(h1)/len(h1))
-    var.append((np.var(h1)))
+for k in [16,32]:
+    u = []
+    var = []
+    for i in range(0,10):
+        Run(k, RunTime)
+        u.append(sum(h1)/len(h1))
+        var.append((np.var(h1)))
     
-    slopes = np.zeros(L)
-    thresholds = np.zeros(L)
-    changes = []
-    h1 = []
-    for i in range(len(thresholds)):
-        thresholds[i] = np.random.choice([1,2], p=[P,1-P])
+        slopes = np.zeros(L)
+        thresholds = np.zeros(L)
+        changes = []
+        h1 = []
+        for i in range(len(thresholds)):
+            thresholds[i] = np.random.choice([1,2], p=[P,1-P])
 
-print('The average height is:', sum(u)/len(u), '+-', np.sqrt(sum(var)/len(var)))
+    print('The average height is:', sum(u)/len(u), '+-', np.sqrt(sum(var)/len(var)))
 #%%
 '''
 Task 2a
@@ -154,10 +155,10 @@ plt.plot(datax['x32'],datay['y32'], label = 'L = 32')
 plt.plot(datax['x64'],datay['y64'], label = 'L = 64')
 plt.plot(datax['x128'],datay['y128'], label = 'L = 128')
 plt.plot(datax['x256'],datay['y256'], label = 'L = 256')
-plt.title('Time to reach steady state')
-plt.xlabel('Time since beginning of simulation')
-plt.ylabel('Height of pile')
+plt.xlabel('Time since beginning of simulation', fontsize = 20)
+plt.ylabel('Height of pile', fontsize = 20)
 plt.legend(loc = 'upper left')
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2a',dpi=500)
 
 #%%
 '''
@@ -258,7 +259,7 @@ plt.legend(loc = 'upper left')
 tasks 2e-2g data
 '''
 heights = []
-stdevs = []
+heightsSquare = []
 heightProbs = {}
 for i in [4, 8, 16, 32, 64, 128, 256]:
     totT = 0
@@ -273,23 +274,22 @@ for i in [4, 8, 16, 32, 64, 128, 256]:
 
     Run(i, RunTime)             
     heights.append(sum(h1)/(tc[-1]-tc[0]))
-    stdevs.append(np.sqrt(sum(map(lambda x: x*x, h1))/(tc[-1]-tc[0])-
-                  (sum(h1)/(tc[-1]-tc[0]))**2))
+    heightsSquare.append((sum(map(lambda x: x**2, h1)))/(tc[-1]-tc[0]))
     for j in range(int(min(h1)), int(max(h1))+1):
         heightProbs['L{}-H{}'.format(i,j)]= h1.count(j)  
         
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeights', 'wb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsRun3', 'wb') as f:
     pickle.dump(heights,f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eStdevs', 'wb') as f:
-    pickle.dump(stdevs,f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightProbs', 'wb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsSquaredRun3', 'wb') as f:
+    pickle.dump(heightsSquare,f)
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightProbsRun3', 'wb') as f:
     pickle.dump(heightProbs,f)
     
 #%%
 '''
 task 2e
 '''
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeights', 'rb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsRun3', 'rb') as f:
    heights = pickle.load(f)
 
 def Corr(L, a0, a1, w1):
@@ -312,10 +312,15 @@ plt.show()
 '''
 task 2f
 '''
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eStdevs', 'rb') as f:
-   stdevs = pickle.load(f)
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsRun3', 'rb') as f:
+   heights = pickle.load(f)
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsSquaredRun3', 'rb') as f:
+   heightsSquared = pickle.load(f)
+   
 S = np.array([4, 8, 16, 32, 64, 128, 256])
-
+stdevs = []
+for k in range(len(heights)):
+    stdevs.append(np.sqrt(heightsSquared[k] - heights[k]**2))
 plt.plot(S, stdevs, '--bo', label = 'data')
 plt.xlabel('System size')
 plt.ylabel('Average height')
@@ -327,7 +332,7 @@ plt.show()
 '''
 task 2ga
 '''
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightProbs', 'rb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightProbsRun2', 'rb') as f:
    heightProbs = pickle.load(f)
 
 Heights4 = []
@@ -353,14 +358,14 @@ Heights16 = [x/sum(Heights16) for x in Heights16]
     
 Heights32 = []
 Config32 = []
-for i in range(47,62):
+for i in range(49,62):
     Heights32.append(heightProbs['L32-H{}'.format(i)])
     Config32.append(i)
 Heights32 = [x/sum(Heights32) for x in Heights32]
     
 Heights64 = []
 Config64 = []
-for i in range(103,117):
+for i in range(103,118):
     Heights64.append(heightProbs['L64-H{}'.format(i)])
     Config64.append(i)
 Heights64 = [x/sum(Heights64) for x in Heights64]
@@ -369,14 +374,14 @@ Heights64 = [x/sum(Heights64) for x in Heights64]
 
 Heights128 = []
 Config128 = []
-for i in range(213,229):
+for i in range(212,229):
     Heights128.append(heightProbs['L128-H{}'.format(i)])
     Config128.append(i)
 Heights128 = [x/sum(Heights128) for x in Heights128]
     
 Heights256 = []
 Config256 = []
-for i in range(433,452):
+for i in range(432,450):
     Heights256.append(heightProbs['L256-H{}'.format(i)])
     Config256.append(i)
 Heights256 = [x/sum(Heights256) for x in Heights256]
@@ -399,60 +404,60 @@ task 2gb
 maybe multiply y by stdevand and (x-avgheight)/stdev  
 '''
 
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeights', 'rb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsRun2', 'rb') as f:
    heights = pickle.load(f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eStdevs', 'rb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eStdevsRun2', 'rb') as f:
    stdevs = pickle.load(f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightProbs', 'rb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightProbsRun2', 'rb') as f:
    heightProbs = pickle.load(f)
    
 Heights4 = []
 Config4 = []
 for i in range(4,9):
     Heights4.append(heightProbs['L4-H{}'.format(i)]*stdevs[0])
-    Config4.append((i-heights[0])*stdevs[0])
+    Config4.append((i-heights[0])/stdevs[0])
 Heights4 = [x/sum(Heights4) for x in Heights4]
 
 Heights8 = []
 Config8 = []
 for i in range(10,17):
     Heights8.append(heightProbs['L8-H{}'.format(i)]*stdevs[1])
-    Config8.append((i-heights[1])*stdevs[1])
+    Config8.append((i-heights[1])/stdevs[1])
 Heights8 = [x/sum(Heights8) for x in Heights8]
     
 Heights16 = []
 Config16 = []
 for i in range(22,33):
     Heights16.append(heightProbs['L16-H{}'.format(i)]*stdevs[2])
-    Config16.append((i-heights[2])*stdevs[2])
+    Config16.append((i-heights[2])/stdevs[2])
 Heights16 = [x/sum(Heights16) for x in Heights16]
     
 Heights32 = []
 Config32 = []
-for i in range(47,62):
+for i in range(49,62):
     Heights32.append(heightProbs['L32-H{}'.format(i)]*stdevs[3])
-    Config32.append((i-heights[3])*stdevs[3])
+    Config32.append((i-heights[3])/stdevs[3])
 Heights32 = [x/sum(Heights32) for x in Heights32]
    
 Heights64 = []
 Config64 = []
-for i in range(103,117):
+for i in range(103,118):
     Heights64.append(heightProbs['L64-H{}'.format(i)]*stdevs[4])
-    Config64.append((i-heights[4])*stdevs[4])
+    Config64.append((i-heights[4])/stdevs[4])
 Heights64 = [x/sum(Heights64) for x in Heights64]
     
 Heights128 = []
 Config128 = []
-for i in range(213,229):
+for i in range(212,229):
     Heights128.append(heightProbs['L128-H{}'.format(i)]*stdevs[5])
-    Config128.append((i-heights[5])*stdevs[5])
+    Config128.append((i-heights[5])/stdevs[5])
 Heights128 = [x/sum(Heights128) for x in Heights128]
     
 Heights256 = []
 Config256 = []
-for i in range(433,452):
+for i in range(432,450):
     Heights256.append(heightProbs['L256-H{}'.format(i)]*stdevs[6])
-    Config256.append((i-heights[6])*stdevs[6])
+    Config256.append((i-heights[6])/stdevs[6])
 Heights256 = [x/sum(Heights256) for x in Heights256]
    
 plt.plot(Config4, Heights4, label = 'L = 4')
@@ -566,6 +571,7 @@ plt.plot(x64,y64, '--ko',label='L64')
 plt.plot(x128,y128, '--yo',label='L128')
 plt.plot(x256,y256, '--mo',label='L256')
 plt.xscale('log')
+plt.yscale('log')
 plt.legend()
 plt.xlabel('Avalanche size')
 plt.ylabel('Probability')
@@ -575,3 +581,31 @@ plt.title('Binned probabilities')
 '''
 3b
 '''
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3aval', 'rb') as f:
+     aval_size_data = pickle.load(f)
+
+moments = [[] for x in range(4)]
+SysSize = [4, 8, 16, 32, 64, 128, 256]
+for k in [1,2,3,4]:
+    for i in SysSize:
+        m = []
+        for s in aval_size_data['L{}'.format(i)]:
+            m.append(s**k)
+        moments[k-1].append(sum(m)/len(m))
+        
+plt.plot(SysSize, moments[0], '--bo', label = '$k=1$')
+plt.plot(SysSize, moments[1], '--ro', label = '$k=2$')
+plt.plot(SysSize, moments[2], '--mo', label = '$k=3$')
+plt.plot(SysSize, moments[3], '--go', label = '$k=4$')
+plt.yscale('log')
+#plt.xscale('log')
+plt.legend()
+plt.xlabel('System size L', fontsize = 15)
+plt.ylabel(r'$\langle s^{k} \rangle$', fontsize = 15)
+#plt.title('Avalanche size moments')
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/final',dpi=500)
+
+    
+
+        
+    
