@@ -10,20 +10,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 from scipy.optimize import curve_fit as cf
+import re
+import math as m
 
 L = 16                  ##################
 P = 0.5                 #input parameters#
 RunTime = 100000        ##################
+Systems = np.array([4,8,16,32,64,128,256])
 
 SteadyState = False             #################
 slopes = np.zeros(L)            #initialisations#
 thresholds = np.zeros(L)        #################
 
 changes = []    #keeps track of which sites relaxed
-h1 = []         #height of site 1 
-totH = 0        #total sum of heights of all site
+totH = 0        #height of the pile
 totT = 0        #total time since the beginning
-pileH = []      #list for total heights at times totT
+pileH = []      #list for pile height at times totT
 tc = []         #records time after ss has been reached
 s = 0           #avalnche size
 s_sizes = []    #list for avalanche sizes
@@ -33,6 +35,7 @@ for i in range(len(thresholds)):             #randomise thresholds
     
 
 def Drive(GrainNo = 1):
+    '''Drives the system by adding number of grains determined by GrainNo'''
     global totH
     global totT
     slopes[0] = slopes[0] + GrainNo
@@ -40,6 +43,8 @@ def Drive(GrainNo = 1):
     totT += 1
 
 def RelaxFirst():
+    '''Checks whether first site needs to be relaxed and if so, relaxes it'''
+    global totH
     global s
     if slopes[0]>thresholds[0]:
         slopes[0] -= 2
@@ -47,10 +52,13 @@ def RelaxFirst():
         thresholds[0] = np.random.choice([1,2], p=[P,1-P])
         changes.append(0)
         changes.append(1)
+        totH -= 1
         s += 1
 
 
 def RelaxSelect(L=4, a=[]):
+    '''Checks if all the sites in the sites to be relaxed list need relaxation,
+    and if so, relaxes them then outputs the updated list of sites to check'''
     global totH
     global SteadyState
     global s
@@ -63,8 +71,9 @@ def RelaxSelect(L=4, a=[]):
                 thresholds[0] = np.random.choice([1,2], p=[P,1-P])
                 newChanges.append(0)
                 newChanges.append(1)
+                totH -= 1
                 s += 1
-        if a[i] != 0 and a[i] < L-1:
+        elif a[i] < L-1:
             if slopes[a[i]]>thresholds[a[i]]:
                 slopes[a[i]] -= 2
                 slopes[a[i]+1] += 1
@@ -74,7 +83,7 @@ def RelaxSelect(L=4, a=[]):
                 newChanges.append(a[i]+1)
                 newChanges.append(a[i]-1)
                 s += 1
-        if a[i] == L-1:
+        else:
             if slopes[L-1]>thresholds[L-1]:
                 slopes[L-1] -= 1
                 slopes[L-2] += 1
@@ -82,7 +91,6 @@ def RelaxSelect(L=4, a=[]):
                 newChanges.append(L-1)
                 newChanges.append(L-2)
                 SteadyState = True
-                totH -= 1
                 s += 1
     return newChanges
     
@@ -97,47 +105,50 @@ def Run(L, relPeriods = 1000):
         RelaxFirst()
         changes = list(dict.fromkeys(changes)) #gets rid of repeats
         while changes != []:
-            changes = list(dict.fromkeys(RelaxSelect(L, changes))) #gets rid of repeats
-        #h1.append(sum(slopes))
+            changes = list(dict.fromkeys(RelaxSelect(L, changes))) 
         if SteadyState == True:
-            #   break
-            tc.append(totT)
-            h1.append(sum(slopes))
+            #break
+            #tc.append(totT)
+            #pileH.append(totH)
             s_sizes.append(s)
+        tc.append(totT)
         pileH.append(totH)
         s = 0
 #%%        
 '''
 Task 1
 '''
-for k in [16,32]:
-    u = []
-    var = []
-    for i in range(0,10):
-        Run(k, RunTime)
-        u.append(sum(h1)/len(h1))
-        var.append((np.var(h1)))
+L = 16
+RunTime = 100000
+u = []
+var = []
+for i in range(0,10):
+    Run(L, RunTime)
+    u.append(sum(pileH)/len(pileH))
+    var.append((np.var(pileH)))
     
-        slopes = np.zeros(L)
-        thresholds = np.zeros(L)
-        changes = []
-        h1 = []
-        for i in range(len(thresholds)):
-            thresholds[i] = np.random.choice([1,2], p=[P,1-P])
+    slopes = np.zeros(L)
+    thresholds = np.zeros(L)
+    changes = []
+    pileH = []
+    totH = 0
+    totT = 0
+    for i in range(len(thresholds)):
+        thresholds[i] = np.random.choice([1,2], p=[P,1-P])
 
-    print('The average height is:', sum(u)/len(u), '+-', np.sqrt(sum(var)/len(var)))
+print('The average height is:', sum(u)/len(u), '+-', np.sqrt(sum(var)/len(var)))
 #%%
 '''
 Task 2a
 '''
 datax = {}
 datay = {}
-for i in [4, 8, 16, 32, 64, 128, 256]:
+RunTime = 100000
+for i in Systems:
     pileH = []
     totT = 0
     totH = 0
     changes = []
-    h1 = []
     SteadyState = False             #################
     slopes = np.zeros(i)            #initialisations#
     thresholds = np.zeros(i)        #################
@@ -146,8 +157,17 @@ for i in [4, 8, 16, 32, 64, 128, 256]:
 
     Run(i, RunTime)
     datax['x{0}'.format(i)] = list(range(totT))
-    datay['y{0}'.format(i)] = h1
+    datay['y{0}'.format(i)] = pileH
 
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2aDatax', 'wb') as f:
+    pickle.dump(datax,f)
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2aDatay', 'wb') as f:
+    pickle.dump(datay,f)
+#%%
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2aDatax', 'rb') as f:
+    datax = pickle.load(f)
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2aDatay', 'rb') as f:
+    datay = pickle.load(f)
 plt.plot(datax['x4'],datay['y4'], label = 'L = 4')
 plt.plot(datax['x8'],datay['y8'], label = 'L = 8')
 plt.plot(datax['x16'],datay['y16'], label = 'L = 16')
@@ -155,24 +175,24 @@ plt.plot(datax['x32'],datay['y32'], label = 'L = 32')
 plt.plot(datax['x64'],datay['y64'], label = 'L = 64')
 plt.plot(datax['x128'],datay['y128'], label = 'L = 128')
 plt.plot(datax['x256'],datay['y256'], label = 'L = 256')
-plt.xlabel('Time since beginning of simulation', fontsize = 20)
-plt.ylabel('Height of pile', fontsize = 20)
-plt.legend(loc = 'upper left')
+plt.xlabel('$t$', fontsize = 15)
+plt.ylabel('$h(t;L)$', fontsize = 15)
+plt.legend(loc = 'upper left', fontsize = 10)
 plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2a',dpi=500)
 
 #%%
 '''
-Task2b/c
+Task2b/c data
 '''
 times = []         #list of times to reach ss
 iterations = []    #for a number of runs
+RunTime = 100000
 for i in range(10):
-    for i in [4, 8, 16, 32, 64, 128, 256]:
+    for i in Systems:
         pileH = []
         totT = 0
         totH = 0
         changes = []
-        h1 = []
         SteadyState = False             #################
         slopes = np.zeros(i)            #initialisations#
         thresholds = np.zeros(i)        #################
@@ -183,20 +203,49 @@ for i in range(10):
         times.append(totT)
     iterations.append(times)
     times = []
-print(iterations)
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2bcData2', 'wb') as f:
+    pickle.dump(iterations,f)
+#%%
+
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2bcData', 'rb') as f:
+    iterations = pickle.load(f)
+
+#iterations = [[18, 62, 210, 872, 3549, 14059, 55030], [18, 63, 221, 866, 3452, 14032, 55879], [14, 58, 224, 869, 3432, 13671, 55431], [12, 65, 215, 908, 3528, 13767, 56070], [13, 46, 221, 885, 3510, 13582, 55581], [20, 64, 206, 885, 3458, 13958, 56655], [18, 62, 231, 899, 3469, 13626, 56450], [13, 62, 226, 934, 3376, 14098, 56455], [12, 61, 215, 913, 3638, 14334, 56140], [17, 51, 213, 893, 3469, 13738, 55873]]
+avg = []
+for i in range(len(iterations[0])):
+    a = []
+    for k in range(len(iterations)):  
+        a.append(iterations[k][i])
+    avg.append(sum(a)/len(a))
+
+def Fit(L, a, b):
+    H = a*(L**b)
+    return H
+
+popt, pcov = cf(Fit, Systems, avg)
+
+print(popt,pcov)
+
+plt.plot(Systems, avg, '--bo', label = 'data')
+plt.plot(Systems, Fit(Systems,*popt), '-r', label = 'fit')
+plt.xlabel('$L$', fontsize=15)
+plt.ylabel(r'$\langle t_{c}(L) \rangle$', fontsize=15)
+plt.legend(fontsize=10)
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2b',dpi=500)
+
 #%%
 '''
 Task 2d data
 '''
 datax = {}
 datay = {}
-
-for i in [4, 8, 16, 32, 64, 128, 256]:
+RunTime = 100000
+for i in Systems:
     heights = []       #list of heights on iterations
     for k in range(10):
         totT = 0
         changes = []
-        h1 = []
+        pileH = []
         tc = []
         SteadyState = False             #################
         slopes = np.zeros(i)            #initialisations#
@@ -205,7 +254,7 @@ for i in [4, 8, 16, 32, 64, 128, 256]:
             thresholds[k] = np.random.choice([1,2], p=[P,1-P])
 
         Run(i, RunTime)             
-        heights.append(h1)
+        heights.append(pileH)
     scaled_t = [x/(i**2) for x in list(range(RunTime))]
     scaled_h = [x/i for x in np.mean(heights, axis = 0)]
     datax['x{0}'.format(i)] = scaled_t
@@ -226,9 +275,9 @@ datay['y128'].pop(0)
 datay['y256'].pop(0)
 datax['x256'].pop(0)
 
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2dDatax', 'wb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2dDatax2', 'wb') as f:
     pickle.dump(datax,f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2dDatay', 'wb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2dDatay2', 'wb') as f:
     pickle.dump(datay,f)
 #%%
 '''
@@ -247,12 +296,12 @@ plt.plot(datax['x32'],datay['y32'], label = 'L = 32')
 plt.plot(datax['x64'],datay['y64'], label = 'L = 64')
 plt.plot(datax['x128'],datay['y128'], label = 'L = 128')
 plt.plot(datax['x256'],datay['y256'], label = 'L = 256')
-plt.title('Data collapse for the scaled height')
-#plt.xscale('log')
-#plt.yscale('log')
-plt.xlabel('Time/(system size)^2')
-plt.ylabel('Height/system size')
-plt.legend(loc = 'upper left')
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel(r'$t/L^{2}$',fontsize=15)
+plt.ylabel(r'$\tilde{h}/L$', fontsize=15)
+plt.legend(loc = 'lower right', fontsize=10)
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2d', dpi=500)
 
 #%%
 '''
@@ -261,10 +310,11 @@ tasks 2e-2g data
 heights = []
 heightsSquare = []
 heightProbs = {}
-for i in [4, 8, 16, 32, 64, 128, 256]:
+RunTime = 1000000
+for i in Systems:
     totT = 0
     changes = []
-    h1 = []
+    pileH = []
     tc = []
     SteadyState = False             #################
     slopes = np.zeros(i)            #initialisations#
@@ -273,10 +323,10 @@ for i in [4, 8, 16, 32, 64, 128, 256]:
         thresholds[k] = np.random.choice([1,2], p=[P,1-P])
 
     Run(i, RunTime)             
-    heights.append(sum(h1)/(tc[-1]-tc[0]))
-    heightsSquare.append((sum(map(lambda x: x**2, h1)))/(tc[-1]-tc[0]))
-    for j in range(int(min(h1)), int(max(h1))+1):
-        heightProbs['L{}-H{}'.format(i,j)]= h1.count(j)  
+    heights.append(sum(pileH)/(tc[-1]-tc[0]))
+    heightsSquare.append((sum(map(lambda x: x**2, pileH)))/(tc[-1]-tc[0]))
+    for j in range(int(min(pileH)), int(max(pileH))+1):
+        heightProbs['L{}-H{}'.format(i,j)]= pileH.count(j)  
         
 with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsRun3', 'wb') as f:
     pickle.dump(heights,f)
@@ -296,17 +346,23 @@ def Corr(L, a0, a1, w1):
     H = a0*L - a0*a1*(L**(1-w1))
     return H
 
-S = np.array([4, 8, 16, 32, 64, 128, 256])
-popt, pcov = cf(Corr, S, heights)
+#def Corr2(L,a0,a1,a2,w1,w2):
+#    H = a0*L - a0*a1*(L**(1-w1)) + a0*a1*a2*(L**(1-w2))
+#    return H
 
-print(popt, pcov)
-plt.plot(S, heights, '--bo', label = 'data')
-plt.plot(S, Corr(S,*popt), '-r', label = 'fit')
-plt.xlabel('System size')
-plt.ylabel('Average height')
-plt.title('Time-averaged heights against system size in steady state')
-plt.legend()
+popt, pcov = cf(Corr, Systems, heights)
+#popt2, pcov2 = cf(Corr2, Systems, heights)
+
+print(popt, np.sqrt(pcov))
+#print(popt2, pcov2)
+plt.plot(Systems, heights, '--bo', label = 'data')
+plt.plot(Systems, Corr(Systems,*popt), '-r', label = 'two term fit')
+#plt.plot(Systems, Corr2(Systems,*popt2), '-g', label = 'three term fit')
+plt.xlabel('$L$', fontsize = 15)
+plt.ylabel(r'$\langle h(t;L) \rangle_{t}$', fontsize = 15)
+plt.legend(fontsize = 10)
 plt.show()
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2e', dpi=500)
 
 #%%
 '''
@@ -317,74 +373,41 @@ with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model proje
 with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsSquaredRun3', 'rb') as f:
    heightsSquared = pickle.load(f)
    
-S = np.array([4, 8, 16, 32, 64, 128, 256])
 stdevs = []
 for k in range(len(heights)):
     stdevs.append(np.sqrt(heightsSquared[k] - heights[k]**2))
-plt.plot(S, stdevs, '--bo', label = 'data')
-plt.xlabel('System size')
-plt.ylabel('Average height')
-plt.title('Standard deviation of average heights against system size')
-plt.legend()
+
+def Fit(L, a, b):
+    R = a*L**b
+    return R
+
+popt, pcov = cf(Fit, Systems, stdevs)
+print(popt, np.sqrt(pcov))
+plt.plot(Systems, stdevs, 'bo', label = 'data')
+plt.plot(Systems, Fit(Systems, *popt), '-r', label = 'fit')
+plt.xlabel('$L$', fontsize = 15)
+plt.ylabel(r'$\sigma_{h}(L)$', fontsize = 15)
+plt.legend(fontsize = 10)
 plt.show()
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2f', dpi=500)
+
    
 #%%
 '''
 task 2ga
 '''
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightProbsRun2', 'rb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightProbsRun3', 'rb') as f:
    heightProbs = pickle.load(f)
 
-Heights4 = []
-Config4 = []
-for i in range(4,9):
-    Heights4.append(heightProbs['L4-H{}'.format(i)])
-    Config4.append(i)
-Heights4 = [x/sum(Heights4) for x in Heights4]
+H = globals()
+C = globals()
 
-Heights8 = []
-Config8 = []
-for i in range(10,17):
-    Heights8.append(heightProbs['L8-H{}'.format(i)])
-    Config8.append(i)
-Heights8 = [x/sum(Heights8) for x in Heights8]
+for i in Systems:
+    H['Heights{0}'.format(i)] = [value for key, value in heightProbs.items() if 'L{0}'.format(i) in key]
+    H['Heights{0}'.format(i)] = [x/sum(H['Heights{0}'.format(i)]) for x in H['Heights{0}'.format(i)]]
+    C['Config{0}'.format(i)] = [key for key, value in heightProbs.items() if 'L{0}'.format(i) in key]
+    C['Config{0}'.format(i)] = [int(re.sub('L{0}-H'.format(i),'',x)) for x in C['Config{0}'.format(i)]]
     
-Heights16 = []
-Config16 = []
-for i in range(22,33):
-    Heights16.append(heightProbs['L16-H{}'.format(i)])
-    Config16.append(i)
-Heights16 = [x/sum(Heights16) for x in Heights16]
-    
-Heights32 = []
-Config32 = []
-for i in range(49,62):
-    Heights32.append(heightProbs['L32-H{}'.format(i)])
-    Config32.append(i)
-Heights32 = [x/sum(Heights32) for x in Heights32]
-    
-Heights64 = []
-Config64 = []
-for i in range(103,118):
-    Heights64.append(heightProbs['L64-H{}'.format(i)])
-    Config64.append(i)
-Heights64 = [x/sum(Heights64) for x in Heights64]
-
-Heights64 = [x/sum(Heights64) for x in Heights64]
-
-Heights128 = []
-Config128 = []
-for i in range(212,229):
-    Heights128.append(heightProbs['L128-H{}'.format(i)])
-    Config128.append(i)
-Heights128 = [x/sum(Heights128) for x in Heights128]
-    
-Heights256 = []
-Config256 = []
-for i in range(432,450):
-    Heights256.append(heightProbs['L256-H{}'.format(i)])
-    Config256.append(i)
-Heights256 = [x/sum(Heights256) for x in Heights256]
 
 plt.plot(Config4, Heights4, label = 'L = 4')
 plt.plot(Config8, Heights8, label = 'L = 8')
@@ -393,94 +416,57 @@ plt.plot(Config32, Heights32, label = 'L = 32')
 plt.plot(Config64, Heights64, label = 'L = 64')
 plt.plot(Config128, Heights128, label = 'L = 128')
 plt.plot(Config256, Heights256, label = 'L = 256')
-plt.legend()
-plt.xlabel('h')
-plt.ylabel(r'$P(h,L)$')
-plt.title('Probability of configurations of given height')
-
+plt.legend(fontsize = 10)
+plt.xlabel('$h$', fontsize = 15)
+plt.ylabel(r'$P(h,L)$', fontsize = 15)
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2ga', dpi=500)
 #%%
 '''
-task 2gb
-maybe multiply y by stdevand and (x-avgheight)/stdev  
+task 2gb 
 '''
 
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsRun2', 'rb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsRun3', 'rb') as f:
    heights = pickle.load(f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eStdevsRun2', 'rb') as f:
-   stdevs = pickle.load(f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightProbsRun2', 'rb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsSquaredRun3', 'rb') as f:
+   heightsSquared = pickle.load(f)
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightProbsRun3', 'rb') as f:
    heightProbs = pickle.load(f)
    
-Heights4 = []
-Config4 = []
-for i in range(4,9):
-    Heights4.append(heightProbs['L4-H{}'.format(i)]*stdevs[0])
-    Config4.append((i-heights[0])/stdevs[0])
-Heights4 = [x/sum(Heights4) for x in Heights4]
+stdevs = [np.sqrt(heightsSquared[x]-heights[x]**2) for x in range(7)]
 
-Heights8 = []
-Config8 = []
-for i in range(10,17):
-    Heights8.append(heightProbs['L8-H{}'.format(i)]*stdevs[1])
-    Config8.append((i-heights[1])/stdevs[1])
-Heights8 = [x/sum(Heights8) for x in Heights8]
-    
-Heights16 = []
-Config16 = []
-for i in range(22,33):
-    Heights16.append(heightProbs['L16-H{}'.format(i)]*stdevs[2])
-    Config16.append((i-heights[2])/stdevs[2])
-Heights16 = [x/sum(Heights16) for x in Heights16]
-    
-Heights32 = []
-Config32 = []
-for i in range(49,62):
-    Heights32.append(heightProbs['L32-H{}'.format(i)]*stdevs[3])
-    Config32.append((i-heights[3])/stdevs[3])
-Heights32 = [x/sum(Heights32) for x in Heights32]
+H = globals()
+C = globals()
+
+for i in Systems:
+    H['Heights{0}'.format(i)] = [value for key, value in heightProbs.items() if 'L{0}'.format(i) in key]
+    H['Heights{0}'.format(i)] = [x*(stdevs[int(m.log(i,2)-2)])/sum(H['Heights{0}'.format(i)]) for x in H['Heights{0}'.format(i)]]
+    C['Config{0}'.format(i)] = [key for key, value in heightProbs.items() if 'L{0}'.format(i) in key]
+    C['Config{0}'.format(i)] = [int(re.sub('L{0}-H'.format(i),'',x)) for x in C['Config{0}'.format(i)]]
+    C['Config{0}'.format(i)] = [(x-heights[int(m.log(i,2)-2)])/stdevs[int(m.log(i,2)-2)] for x in C['Config{0}'.format(i)]]
+
    
-Heights64 = []
-Config64 = []
-for i in range(103,118):
-    Heights64.append(heightProbs['L64-H{}'.format(i)]*stdevs[4])
-    Config64.append((i-heights[4])/stdevs[4])
-Heights64 = [x/sum(Heights64) for x in Heights64]
-    
-Heights128 = []
-Config128 = []
-for i in range(212,229):
-    Heights128.append(heightProbs['L128-H{}'.format(i)]*stdevs[5])
-    Config128.append((i-heights[5])/stdevs[5])
-Heights128 = [x/sum(Heights128) for x in Heights128]
-    
-Heights256 = []
-Config256 = []
-for i in range(432,450):
-    Heights256.append(heightProbs['L256-H{}'.format(i)]*stdevs[6])
-    Config256.append((i-heights[6])/stdevs[6])
-Heights256 = [x/sum(Heights256) for x in Heights256]
-   
-plt.plot(Config4, Heights4, label = 'L = 4')
-plt.plot(Config8, Heights8, label = 'L = 8')
-plt.plot(Config16, Heights16, label = 'L = 16')
-plt.plot(Config32, Heights32, label = 'L = 32')
-plt.plot(Config64, Heights64, label = 'L = 64')
-plt.plot(Config128, Heights128, label = 'L = 128')
-plt.plot(Config256, Heights256, label = 'L = 256')
-plt.legend()
-plt.xlabel(r'$(h - \langle h \rangle ) / \sigma$')
-plt.ylabel(r'$\sigma_h P(h,L)$')
-plt.title('Data collapse for probability of configurations of given height')
+plt.plot(Config4, Heights4, '+', label = 'L = 4')
+plt.plot(Config8, Heights8, '+', label = 'L = 8')
+plt.plot(Config16, Heights16, '+', label = 'L = 16')
+plt.plot(Config32, Heights32, '+', label = 'L = 32')
+plt.plot(Config64, Heights64, '+', label = 'L = 64')
+plt.plot(Config128, Heights128, '+', label = 'L = 128')
+plt.plot(Config256, Heights256, '+', label = 'L = 256')
+plt.legend(fontsize = 10)
+plt.xlabel(r'$(h - \langle h \rangle ) / \sigma$', fontsize = 15)
+plt.ylabel(r'$\sigma_h P(h,L)$', fontsize = 15)
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2gb', dpi=500)
 
 #%%
 '''
 task 3 data
 '''
 aval_size_data = {}
-for i in [4, 8, 16, 32, 64, 128, 256]:
+RunTime = 1000000
+for i in Systems:
     totT = 0
     changes = []
-    h1 = []
+    pileH = []
     tc = []
     SteadyState = False             #################
     slopes = np.zeros(i)            #initialisations#
@@ -493,7 +479,7 @@ for i in [4, 8, 16, 32, 64, 128, 256]:
     Run(i, RunTime)
     aval_size_data['L{0}'.format(i)] = s_sizes
     
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3aval', 'wb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3aval2', 'wb') as f:
     pickle.dump(aval_size_data,f) 
 #%%
 '''
@@ -503,7 +489,7 @@ with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model proje
      aval_size_data = pickle.load(f)
 
 ocurrences = {}
-for i in [4, 8, 16, 32, 64, 128, 256]:
+for i in Systems:
     for k in range(0,max(aval_size_data['L{}'.format(i)])):
         ocurrences['L{}-{}'.format(i,k)] = aval_size_data['L{}'.format(i)].count(k)
 
@@ -585,25 +571,23 @@ with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model proje
      aval_size_data = pickle.load(f)
 
 moments = [[] for x in range(4)]
-SysSize = [4, 8, 16, 32, 64, 128, 256]
 for k in [1,2,3,4]:
-    for i in SysSize:
+    for i in Systems:
         m = []
         for s in aval_size_data['L{}'.format(i)]:
             m.append(s**k)
         moments[k-1].append(sum(m)/len(m))
         
-plt.plot(SysSize, moments[0], '--bo', label = '$k=1$')
-plt.plot(SysSize, moments[1], '--ro', label = '$k=2$')
-plt.plot(SysSize, moments[2], '--mo', label = '$k=3$')
-plt.plot(SysSize, moments[3], '--go', label = '$k=4$')
+plt.plot(Systems, moments[0], '--bo', label = '$k=1$')
+plt.plot(Systems, moments[1], '--ro', label = '$k=2$')
+plt.plot(Systems, moments[2], '--mo', label = '$k=3$')
+plt.plot(Systems, moments[3], '--go', label = '$k=4$')
 plt.yscale('log')
 #plt.xscale('log')
 plt.legend()
-plt.xlabel('System size L', fontsize = 15)
+plt.xlabel('$L$', fontsize = 15)
 plt.ylabel(r'$\langle s^{k} \rangle$', fontsize = 15)
-#plt.title('Avalanche size moments')
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/final',dpi=500)
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3b',dpi=500)
 
     
 
