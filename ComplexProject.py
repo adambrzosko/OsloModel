@@ -12,6 +12,7 @@ import pickle
 from scipy.optimize import curve_fit as cf
 import re
 import math as m
+import scipy.stats as stat
 
 L = 16                  ##################
 P = 0.5                 #input parameters#
@@ -210,7 +211,6 @@ with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model proje
 with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2bcData', 'rb') as f:
     iterations = pickle.load(f)
 
-#iterations = [[18, 62, 210, 872, 3549, 14059, 55030], [18, 63, 221, 866, 3452, 14032, 55879], [14, 58, 224, 869, 3432, 13671, 55431], [12, 65, 215, 908, 3528, 13767, 56070], [13, 46, 221, 885, 3510, 13582, 55581], [20, 64, 206, 885, 3458, 13958, 56655], [18, 62, 231, 899, 3469, 13626, 56450], [13, 62, 226, 934, 3376, 14098, 56455], [12, 61, 215, 913, 3638, 14334, 56140], [17, 51, 213, 893, 3469, 13738, 55873]]
 avg = []
 for i in range(len(iterations[0])):
     a = []
@@ -244,6 +244,7 @@ for i in Systems:
     heights = []       #list of heights on iterations
     for k in range(10):
         totT = 0
+        totH = 0
         changes = []
         pileH = []
         tc = []
@@ -259,21 +260,11 @@ for i in Systems:
     scaled_h = [x/i for x in np.mean(heights, axis = 0)]
     datax['x{0}'.format(i)] = scaled_t
     datay['y{0}'.format(i)] = scaled_h
-        
-datax['x4'].pop(0)
-datay['y4'].pop(0)
-datax['x8'].pop(0)
-datay['y8'].pop(0)
-datay['y16'].pop(0)
-datax['x16'].pop(0)
-datax['x32'].pop(0)
-datay['y32'].pop(0)
-datay['y64'].pop(0)
-datax['x64'].pop(0)
-datax['x128'].pop(0)
-datay['y128'].pop(0)
-datay['y256'].pop(0)
-datax['x256'].pop(0)
+    
+for k in datax.keys():
+    datax[k].pop(0)
+for k in datay.keys():
+    datay[k].pop(0)
 
 with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2dDatax2', 'wb') as f:
     pickle.dump(datax,f)
@@ -313,6 +304,7 @@ heightProbs = {}
 RunTime = 1000000
 for i in Systems:
     totT = 0
+    totH = 0
     changes = []
     pileH = []
     tc = []
@@ -452,6 +444,8 @@ plt.plot(Config32, Heights32, '+', label = 'L = 32')
 plt.plot(Config64, Heights64, '+', label = 'L = 64')
 plt.plot(Config128, Heights128, '+', label = 'L = 128')
 plt.plot(Config256, Heights256, '+', label = 'L = 256')
+x = np.linspace(-4,6,1000)
+plt.plot(x,stat.norm.pdf(x,0,1), '--k', label = 'Normal distribution')
 plt.legend(fontsize = 10)
 plt.xlabel(r'$(h - \langle h \rangle ) / \sigma$', fontsize = 15)
 plt.ylabel(r'$\sigma_h P(h,L)$', fontsize = 15)
@@ -462,9 +456,10 @@ plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model pro
 task 3 data
 '''
 aval_size_data = {}
-RunTime = 1000000
+RunTime = 1500000
 for i in Systems:
     totT = 0
+    totH = 0
     changes = []
     pileH = []
     tc = []
@@ -481,19 +476,6 @@ for i in Systems:
     
 with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3aval2', 'wb') as f:
     pickle.dump(aval_size_data,f) 
-#%%
-'''
-3a    
-'''
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3aval', 'rb') as f:
-     aval_size_data = pickle.load(f)
-
-ocurrences = {}
-for i in Systems:
-    for k in range(0,max(aval_size_data['L{}'.format(i)])):
-        ocurrences['L{}-{}'.format(i,k)] = aval_size_data['L{}'.format(i)].count(k)
-
-    
 #%%
 '''
 3a binned
@@ -549,19 +531,45 @@ x32, y32 = logbin(aval_size_data['L32'])
 x64, y64 = logbin(aval_size_data['L64'])
 x128, y128 = logbin(aval_size_data['L128'])
 x256, y256 = logbin(aval_size_data['L256'])
-plt.plot(x4,y4, '--bo', label='L4')
-plt.plot(x8,y8, '--co',label='L8')
-plt.plot(x16,y16, '--go', label='L16')
-plt.plot(x32,y32, '--ro',label='L32')
-plt.plot(x64,y64, '--ko',label='L64')
-plt.plot(x128,y128, '--yo',label='L128')
-plt.plot(x256,y256, '--mo',label='L256')
+plt.plot(x4,y4, '-', label='L4')
+plt.plot(x8,y8, '-',label='L8')
+plt.plot(x16,y16, '-', label='L16')
+plt.plot(x32,y32, '-',label='L32')
+plt.plot(x64,y64, '-',label='L64')
+plt.plot(x128,y128, '-',label='L128')
+plt.plot(x256,y256, '-',label='L256')
 plt.xscale('log')
 plt.yscale('log')
-plt.legend()
-plt.xlabel('Avalanche size')
-plt.ylabel('Probability')
-plt.title('Binned probabilities')
+plt.legend(fontsize = 10)
+plt.xlabel('s', fontsize = 15)
+plt.ylabel(r'$\tilde{P}_{N}(s;L)$', fontsize = 15)
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3a', dpi=500)
+
+#%%
+'''
+3ab
+'''
+max_aval = []
+for i in Systems:
+    max_aval.append(max(aval_size_data['L{}'.format(i)]))
+    
+def Power(L,a,D):
+    S = a*L**D
+    return S
+
+popt, pcov = cf(Fit, Systems, max_aval)
+print('D', popt, np.sqrt(pcov))
+plt.plot(Systems, stdevs, 'bo', label = 'data')
+plt.plot(Systems, Power(Systems, *popt), '-r', label = 'fit')
+plt.yscale('log')
+plt.xlabel('$L$', fontsize = 15)
+plt.ylabel(r'$s_{max}$', fontsize = 15)
+plt.legend(fontsize = 10)
+plt.show()
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3abD', dpi=500)
+
+
+
      
 #%%
 '''
