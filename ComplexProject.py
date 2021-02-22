@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import pickle
 from scipy.optimize import curve_fit as cf
 import re
-import math as m
+import math
 import scipy.stats as stat
 
 L = 16                  ##################
@@ -108,7 +108,7 @@ def Run(L, relPeriods = 1000):
         while changes != []:
             changes = list(dict.fromkeys(RelaxSelect(L, changes))) 
         if SteadyState == True:
-            #break
+            break
             #tc.append(totT)
             #pileH.append(totH)
             s_sizes.append(s)
@@ -177,6 +177,7 @@ plt.plot(datax['x64'],datay['y64'], label = 'L = 64')
 plt.plot(datax['x128'],datay['y128'], label = 'L = 128')
 plt.plot(datax['x256'],datay['y256'], label = 'L = 256')
 plt.xlabel('$t$', fontsize = 15)
+plt.grid()
 plt.ylabel('$h(t;L)$', fontsize = 15)
 plt.legend(loc = 'upper left', fontsize = 10)
 plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2a',dpi=500)
@@ -208,7 +209,7 @@ with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model proje
     pickle.dump(iterations,f)
 #%%
 
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2bcData', 'rb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2bcData2', 'rb') as f:
     iterations = pickle.load(f)
 
 avg = []
@@ -224,13 +225,18 @@ def Fit(L, a, b):
 
 popt, pcov = cf(Fit, Systems, avg)
 
-print(popt,pcov)
+print('The slope is ', popt[1], ' pm ', np.sqrt(pcov[0][0]))
+print('The intercept is ', popt[0], ' pm ', np.sqrt(pcov[1][1]))
 
-plt.plot(Systems, avg, '--bo', label = 'data')
-plt.plot(Systems, Fit(Systems,*popt), '-r', label = 'fit')
+x = np.linspace(4,260,10000)
+plt.plot(Systems, avg, 'bo', label = 'data')
+plt.plot(x, Fit(x,*popt), '-r', label = 'fit')
 plt.xlabel('$L$', fontsize=15)
 plt.ylabel(r'$\langle t_{c}(L) \rangle$', fontsize=15)
+plt.yscale('log')
+plt.xscale('log')
 plt.legend(fontsize=10)
+plt.grid()
 plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2b',dpi=500)
 
 #%%
@@ -289,6 +295,7 @@ plt.plot(datax['x128'],datay['y128'], label = 'L = 128')
 plt.plot(datax['x256'],datay['y256'], label = 'L = 256')
 plt.xscale('log')
 plt.yscale('log')
+plt.grid()
 plt.xlabel(r'$t/L^{2}$',fontsize=15)
 plt.ylabel(r'$\tilde{h}/L$', fontsize=15)
 plt.legend(loc = 'lower right', fontsize=10)
@@ -338,21 +345,30 @@ def Corr(L, a0, a1, w1):
     H = a0*L - a0*a1*(L**(1-w1))
     return H
 
+def Lin(L, a, b):
+    H = a*L + b
+    return H
+    
 #def Corr2(L,a0,a1,a2,w1,w2):
 #    H = a0*L - a0*a1*(L**(1-w1)) + a0*a1*a2*(L**(1-w2))
 #    return H
 
 popt, pcov = cf(Corr, Systems, heights)
+poptl, pcovl = cf(Lin, Systems, heights)
 #popt2, pcov2 = cf(Corr2, Systems, heights)
-
-print(popt, np.sqrt(pcov))
-#print(popt2, pcov2)
-plt.plot(Systems, heights, '--bo', label = 'data')
-plt.plot(Systems, Corr(Systems,*popt), '-r', label = 'two term fit')
+x = np.linspace(0,260,10000)
+print('a0 is ', popt[0], ' pm ',  np.sqrt(pcov[0][0]))
+print('a1 is ', popt[1], ' pm ',  np.sqrt(pcov[1][1]))
+print('w0 is ', popt[2], ' pm ',  np.sqrt(pcov[2][2]))
+plt.plot(Systems, heights, 'bo', label = 'data')
+plt.plot(x, Lin(x,*poptl), '--k', label = 'single term fit')
+plt.plot(x, Corr(x,*popt), '-r', label = 'two term fit')
+plt.plot
 #plt.plot(Systems, Corr2(Systems,*popt2), '-g', label = 'three term fit')
 plt.xlabel('$L$', fontsize = 15)
 plt.ylabel(r'$\langle h(t;L) \rangle_{t}$', fontsize = 15)
-plt.legend(fontsize = 10)
+plt.grid()
+plt.legend(fontsize = 15)
 plt.show()
 plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2e', dpi=500)
 
@@ -374,11 +390,15 @@ def Fit(L, a, b):
     return R
 
 popt, pcov = cf(Fit, Systems, stdevs)
-print(popt, np.sqrt(pcov))
+print('Slope is ', popt[1], ' pm ', np.sqrt(pcov[1][1]))
+print('Intercept is ', popt[0], ' pm ', np.sqrt(pcov[0][0]))
 plt.plot(Systems, stdevs, 'bo', label = 'data')
 plt.plot(Systems, Fit(Systems, *popt), '-r', label = 'fit')
+plt.xscale('log')
+plt.yscale('log')
 plt.xlabel('$L$', fontsize = 15)
 plt.ylabel(r'$\sigma_{h}(L)$', fontsize = 15)
+plt.grid(which = 'both')
 plt.legend(fontsize = 10)
 plt.show()
 plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2f', dpi=500)
@@ -409,6 +429,7 @@ plt.plot(Config64, Heights64, label = 'L = 64')
 plt.plot(Config128, Heights128, label = 'L = 128')
 plt.plot(Config256, Heights256, label = 'L = 256')
 plt.legend(fontsize = 10)
+plt.grid()
 plt.xlabel('$h$', fontsize = 15)
 plt.ylabel(r'$P(h,L)$', fontsize = 15)
 plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2ga', dpi=500)
@@ -431,10 +452,10 @@ C = globals()
 
 for i in Systems:
     H['Heights{0}'.format(i)] = [value for key, value in heightProbs.items() if 'L{0}'.format(i) in key]
-    H['Heights{0}'.format(i)] = [x*(stdevs[int(m.log(i,2)-2)])/sum(H['Heights{0}'.format(i)]) for x in H['Heights{0}'.format(i)]]
+    H['Heights{0}'.format(i)] = [x*(stdevs[int(math.log(i,2)-2)])/sum(H['Heights{0}'.format(i)]) for x in H['Heights{0}'.format(i)]]
     C['Config{0}'.format(i)] = [key for key, value in heightProbs.items() if 'L{0}'.format(i) in key]
     C['Config{0}'.format(i)] = [int(re.sub('L{0}-H'.format(i),'',x)) for x in C['Config{0}'.format(i)]]
-    C['Config{0}'.format(i)] = [(x-heights[int(m.log(i,2)-2)])/stdevs[int(m.log(i,2)-2)] for x in C['Config{0}'.format(i)]]
+    C['Config{0}'.format(i)] = [(x-heights[int(math.log(i,2)-2)])/stdevs[int(math.log(i,2)-2)] for x in C['Config{0}'.format(i)]]
 
    
 plt.plot(Config4, Heights4, '+', label = 'L = 4')
@@ -447,6 +468,7 @@ plt.plot(Config256, Heights256, '+', label = 'L = 256')
 x = np.linspace(-4,6,1000)
 plt.plot(x,stat.norm.pdf(x,0,1), '--k', label = 'Normal distribution')
 plt.legend(fontsize = 10)
+plt.grid()
 plt.xlabel(r'$(h - \langle h \rangle ) / \sigma$', fontsize = 15)
 plt.ylabel(r'$\sigma_h P(h,L)$', fontsize = 15)
 plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2gb', dpi=500)
@@ -480,10 +502,10 @@ with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model proje
 '''
 3a binned
 '''
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3aval', 'rb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3aval2', 'rb') as f:
      aval_size_data = pickle.load(f)
 
-def logbin(data, scale = 2, zeros = False):
+def logbin(data, scale = 1.3, zeros = False):
     """
     Taken from Max Falkenberg McGillivray
     mff113@ic.ac.uk
@@ -540,6 +562,7 @@ plt.plot(x128,y128, '-',label='L128')
 plt.plot(x256,y256, '-',label='L256')
 plt.xscale('log')
 plt.yscale('log')
+plt.grid()
 plt.legend(fontsize = 10)
 plt.xlabel('s', fontsize = 15)
 plt.ylabel(r'$\tilde{P}_{N}(s;L)$', fontsize = 15)
@@ -547,57 +570,154 @@ plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model pro
 
 #%%
 '''
-3ab
+3abD  log data and assign a linear fit better
 '''
 max_aval = []
 for i in Systems:
     max_aval.append(max(aval_size_data['L{}'.format(i)]))
     
-def Power(L,a,D):
-    S = a*L**D
+def Dee(L,D,a):
+    S = D*L + a
     return S
 
-popt, pcov = cf(Fit, Systems, max_aval)
-print('D', popt, np.sqrt(pcov))
-plt.plot(Systems, stdevs, 'bo', label = 'data')
-plt.plot(Systems, Power(Systems, *popt), '-r', label = 'fit')
-plt.yscale('log')
-plt.xlabel('$L$', fontsize = 15)
-plt.ylabel(r'$s_{max}$', fontsize = 15)
+x = np.log(np.linspace(4,256,10000))
+
+SL = np.log(Systems)
+MAL = np.log(max_aval)
+
+popD, pcovD = cf(Dee, SL, MAL, p0 = np.array([2.20,0.412]))
+print('Slope is ', popD[0], 'pm',  np.sqrt(pcovD[0][0]))
+print('Intercept is ', popD[1], 'pm',  np.sqrt(pcovD[1][1]))
+plt.plot(SL, MAL, 'bo', label = 'data')
+plt.plot(x, Dee(x, *popD), '-r', label = 'fit')
+#plt.yscale('log')
+#plt.xscale('log')
+plt.grid(which = 'both')
+plt.xlabel('$\log{L}$', fontsize = 15)
+plt.ylabel(r'$\log{s_{max}}$', fontsize = 15)
 plt.legend(fontsize = 10)
 plt.show()
 plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3abD', dpi=500)
 
+#%%
+'''
+3abTau
+'''
+def Tau(s, a, t):
+    P = a*s**-t
+    return P
 
+i = 0
+while x256[i] < min(x256)*100:
+    i += 1
+k = -1
+while x256[k] > max(x256)/100:
+    k -= 1
 
+x = x256[i:k]
+y = y256[i:k]
+
+p0 = np.array([0.7,1.55])
+popT, pcovT = cf(Tau, x, y, p0)
+print('tau', popT, np.sqrt(pcovT))
+plt.plot(x256,y256, 'kx',label='L256')
+plt.plot(x, Tau(x, *popT), '-r', label='fit')
+plt.xscale('log')
+plt.yscale('log')
+plt.grid()
+plt.legend(fontsize = 10)
+plt.xlabel('s', fontsize = 15)
+plt.ylabel(r'$\tilde{P}_{N}(s;L)$', fontsize = 15)
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3abT', dpi=500)
+
+#%%
+'''
+3ab
+'''
+plt.plot(x4/(Systems[0]**popD[0]),y4*(x4**popT[1]), '-', label='L4')
+plt.plot(x8/(Systems[1]**popD[0]),y8*(x8**popT[1]), '-',label='L8')
+plt.plot(x16/(Systems[2]**popD[0]),y16*(x16**popT[1]), '-', label='L16')
+plt.plot(x32/(Systems[3]**popD[0]),y32*(x32**popT[1]), '-',label='L32')
+plt.plot(x64/(Systems[4]**popD[0]),y64*(x64**popT[1]), '-',label='L64')
+plt.plot(x128/(Systems[5]**popD[0]),y128*(x128**popT[1]), '-',label='L128')
+plt.plot(x256/(Systems[6]**popD[0]),y256*(x256**popT[1]), '-',label='L256')
+plt.xscale('log')
+plt.yscale('log')
+plt.grid()
+plt.legend(fontsize = 10)
+plt.xlabel('$s/L^{D}$', fontsize = 15)
+plt.ylabel(r'$s^{\tau_{s}}\tilde{P}_{N}(s;L)$', fontsize = 15)
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3ab', dpi=500)
      
 #%%
 '''
 3b
 '''
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3aval', 'rb') as f:
+with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3aval2', 'rb') as f:
      aval_size_data = pickle.load(f)
 
-moments = [[] for x in range(4)]
-for k in [1,2,3,4]:
+no_moments = 4
+moments = [[] for x in range(no_moments)]
+for k in range(1,no_moments+1):
     for i in Systems:
         m = []
         for s in aval_size_data['L{}'.format(i)]:
             m.append(s**k)
         moments[k-1].append(sum(m)/len(m))
-        
-plt.plot(Systems, moments[0], '--bo', label = '$k=1$')
-plt.plot(Systems, moments[1], '--ro', label = '$k=2$')
-plt.plot(Systems, moments[2], '--mo', label = '$k=3$')
-plt.plot(Systems, moments[3], '--go', label = '$k=4$')
+    
+#def Kfit(s, a, b):
+#    K = a*s + b
+#    return K
+
+def Kfit(s, a, b):
+    K = b*s**a
+    return K
+
+SL = np.log(Systems)
+ML = np.log(moments)
+
+popt = [[]for x in range(no_moments)]    
+pcov = [[]for x in range(no_moments)]   
+for i in range(no_moments):
+    popt[i], pcov[i] = cf(Kfit, Systems, moments[i], p0 = np.array([2.2*(i+0.5),1]))
+    print('K={}'.format(i+1) , popt[i], pcov[i])
+
+for j in range(no_moments):    
+    plt.plot(Systems, moments[j], 'o', label = '$k={}$'.format(j+1))
+    plt.plot(Systems, Kfit(Systems, *popt[j]), '-', label = 'Fit for $k={}$'.format(j+1))
+
+plt.xscale('log')
 plt.yscale('log')
-#plt.xscale('log')
 plt.legend()
+plt.grid()
 plt.xlabel('$L$', fontsize = 15)
 plt.ylabel(r'$\langle s^{k} \rangle$', fontsize = 15)
 plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3b',dpi=500)
 
-    
+#%%
+'''
+3b moments analysis
+'''        
+x = []
+y = []
+for i in range(no_moments):
+    x.append(i+1)
+    y.append(popt[i][0])
 
-        
-    
+def Line(x, a, b):
+    y = a*x + b
+    return y
+
+x = np.array(x)
+y = np.array(y)
+opt, cov = cf(Line, x, y)
+print('The estimate for D is ', opt[0], ' pm ',  np.sqrt(cov[0][0]))
+print('The estimate for tau is ', 1-(opt[1]/opt[0]), ' pm ',  np.sqrt(cov[0][0])+np.sqrt(cov[1][1]))
+ 
+plt.plot(x,y, 'o', label = 'data')
+plt.plot(x,Line(x,*opt), '--', label = 'fit')
+plt.grid()
+plt.legend()
+plt.xlabel('$k$', fontsize = 15)
+plt.ylabel(r'$D(1+k-\tau_{s})$', fontsize = 15)
+plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3bb',dpi=500)
