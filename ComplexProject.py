@@ -160,14 +160,14 @@ for i in Systems:
     datax['x{0}'.format(i)] = list(range(totT))
     datay['y{0}'.format(i)] = pileH
 
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2aDatax', 'wb') as f:
+with open('~/Complexity&Networks/Oslo model project/2aDatax', 'wb') as f:
     pickle.dump(datax,f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2aDatay', 'wb') as f:
+with open('~/Complexity&Networks/Oslo model project/2aDatay', 'wb') as f:
     pickle.dump(datay,f)
 #%%
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2aDatax', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/2aDatax', 'rb') as f:
     datax = pickle.load(f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2aDatay', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/2aDatay', 'rb') as f:
     datay = pickle.load(f)
 plt.plot(datax['x4'],datay['y4'], label = 'L = 4')
 plt.plot(datax['x8'],datay['y8'], label = 'L = 8')
@@ -180,7 +180,7 @@ plt.xlabel('$t$', fontsize = 15)
 plt.grid()
 plt.ylabel('$h(t;L)$', fontsize = 15)
 plt.legend(loc = 'upper left', fontsize = 10)
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2a',dpi=500)
+plt.savefig('~/Complexity&Networks/Oslo model project/2a',dpi=500)
 
 #%%
 '''
@@ -205,11 +205,11 @@ for i in range(10):
         times.append(totT)
     iterations.append(times)
     times = []
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2bcData2', 'wb') as f:
+with open('~/Complexity&Networks/Oslo model project/2bcData2', 'wb') as f:
     pickle.dump(iterations,f)
 #%%
 
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2bcData2', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/2bcData2', 'rb') as f:
     iterations = pickle.load(f)
 
 avg = []
@@ -237,7 +237,7 @@ plt.yscale('log')
 plt.xscale('log')
 plt.legend(fontsize=15)
 plt.grid()
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2b',dpi=500)
+plt.savefig('~/Complexity&Networks/Oslo model project/2b',dpi=500)
 
 #%%
 '''
@@ -272,18 +272,18 @@ for k in datax.keys():
 for k in datay.keys():
     datay[k].pop(0)
 
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2dDatax2', 'wb') as f:
+with open('~/Complexity&Networks/Oslo model project/2dDatax2', 'wb') as f:
     pickle.dump(datax,f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2dDatay2', 'wb') as f:
+with open('~/Complexity&Networks/Oslo model project/2dDatay2', 'wb') as f:
     pickle.dump(datay,f)
 #%%
 '''
 2d plot
 
 '''
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2dDatax', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/2dDatax', 'rb') as f:
     datax = pickle.load(f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2dDatay', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/2dDatay', 'rb') as f:
     datay = pickle.load(f)
     
 plt.plot(datax['x4'],datay['y4'], label = 'L = 4')
@@ -299,7 +299,7 @@ plt.grid()
 plt.xlabel(r'$t/L^{2}$',fontsize=15)
 plt.ylabel(r'$\tilde{h}/L$', fontsize=15)
 plt.legend(loc = 'lower right', fontsize=10)
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2d', dpi=500)
+plt.savefig('~/Complexity&Networks/Oslo model project/2d', dpi=500)
 
 #%%
 '''
@@ -327,18 +327,18 @@ for i in Systems:
     for j in range(int(min(pileH)), int(max(pileH))+1):
         heightProbs['L{}-H{}'.format(i,j)]= pileH.count(j)  
         
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsRun3', 'wb') as f:
+with open('~/Complexity&Networks/Oslo model project/2eHeightsRun3', 'wb') as f:
     pickle.dump(heights,f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsSquaredRun3', 'wb') as f:
+with open('~/Complexity&Networks/Oslo model project/2eHeightsSquaredRun3', 'wb') as f:
     pickle.dump(heightsSquare,f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightProbsRun3', 'wb') as f:
+with open('~/Complexity&Networks/Oslo model project/2eHeightProbsRun3', 'wb') as f:
     pickle.dump(heightProbs,f)
     
 #%%
 '''
 task 2e
 '''
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsRun3', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/2eHeightsRun3', 'rb') as f:
    heights = pickle.load(f)
 
 def Corr(L, a0, a1, w1):
@@ -370,15 +370,15 @@ plt.ylabel(r'$\langle h(t;L) \rangle_{t}$', fontsize = 15)
 plt.grid()
 plt.legend(fontsize = 15)
 plt.show()
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2e', dpi=500)
+plt.savefig('~/Complexity&Networks/Oslo model project/2e', dpi=500)
 
 #%%
 '''
 task 2f
 '''
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsRun3', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/2eHeightsRun3', 'rb') as f:
    heights = pickle.load(f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsSquaredRun3', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/2eHeightsSquaredRun3', 'rb') as f:
    heightsSquared = pickle.load(f)
    
 stdevs = []
@@ -401,14 +401,14 @@ plt.ylabel(r'$\sigma_{h}(L)$', fontsize = 15)
 plt.grid(which = 'both')
 plt.legend(fontsize = 15)
 plt.show()
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2f', dpi=500)
+plt.savefig('~/Complexity&Networks/Oslo model project/2f', dpi=500)
 
    
 #%%
 '''
 task 2ga
 '''
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightProbsRun3', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/2eHeightProbsRun3', 'rb') as f:
    heightProbs = pickle.load(f)
 
 H = globals()
@@ -432,17 +432,17 @@ plt.legend(fontsize = 10)
 plt.grid()
 plt.xlabel('$h$', fontsize = 15)
 plt.ylabel(r'$P(h,L)$', fontsize = 15)
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2ga', dpi=500)
+plt.savefig('~/Complexity&Networks/Oslo model project/2ga', dpi=500)
 #%%
 '''
 task 2gb 
 '''
 
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsRun3', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/2eHeightsRun3', 'rb') as f:
    heights = pickle.load(f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightsSquaredRun3', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/2eHeightsSquaredRun3', 'rb') as f:
    heightsSquared = pickle.load(f)
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2eHeightProbsRun3', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/2eHeightProbsRun3', 'rb') as f:
    heightProbs = pickle.load(f)
    
 stdevs = [np.sqrt(heightsSquared[x]-heights[x]**2) for x in range(7)]
@@ -471,7 +471,7 @@ plt.legend(fontsize = 10)
 plt.grid()
 plt.xlabel(r'$(h - \langle h \rangle ) / \sigma_{h}$', fontsize = 15)
 plt.ylabel(r'$\sigma_h P(h,L)$', fontsize = 15)
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/2gb', dpi=500)
+plt.savefig('~/Complexity&Networks/Oslo model project/2gb', dpi=500)
 
 #%%
 '''
@@ -496,13 +496,13 @@ for i in Systems:
     Run(i, RunTime)
     aval_size_data['L{0}'.format(i)] = s_sizes
     
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3aval2', 'wb') as f:
+with open('~/Complexity&Networks/Oslo model project/3aval2', 'wb') as f:
     pickle.dump(aval_size_data,f) 
 #%%
 '''
 3a binned
 '''
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3aval2', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/3aval2', 'rb') as f:
      aval_size_data = pickle.load(f)
 
 def logbin(data, scale = 1.3, zeros = False):
@@ -566,7 +566,7 @@ plt.grid()
 plt.legend(fontsize = 13)
 plt.xlabel('s', fontsize = 15)
 plt.ylabel(r'$\tilde{P}_{N}(s;L)$', fontsize = 15)
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3a', dpi=500)
+plt.savefig('~/Complexity&Networks/Oslo model project/3a', dpi=500)
 
 #%%
 '''
@@ -597,7 +597,7 @@ plt.xlabel('$\log{L}$', fontsize = 15)
 plt.ylabel(r'$\log{s_{max}}$', fontsize = 15)
 plt.legend(fontsize = 15)
 plt.show()
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3abD', dpi=500)
+plt.savefig('~/Complexity&Networks/Oslo model project/3abD', dpi=500)
 
 #%%
 '''
@@ -629,7 +629,7 @@ plt.grid()
 plt.legend(fontsize = 15)
 plt.xlabel('s', fontsize = 15)
 plt.ylabel(r'$\tilde{P}_{N}(s;L)$', fontsize = 15)
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3abT', dpi=500)
+plt.savefig('~/Complexity&Networks/Oslo model project/3abT', dpi=500)
 
 #%%
 '''
@@ -648,13 +648,13 @@ plt.grid()
 plt.legend(fontsize = 13)
 plt.xlabel('$s/L^{D}$', fontsize = 15)
 plt.ylabel(r'$s^{\tau_{s}}\tilde{P}_{N}(s;L)$', fontsize = 15)
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3ab', dpi=500)
+plt.savefig('~/Complexity&Networks/Oslo model project/3ab', dpi=500)
      
 #%%
 '''
 3b
 '''
-with open('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3aval2', 'rb') as f:
+with open('~/Complexity&Networks/Oslo model project/3aval2', 'rb') as f:
      aval_size_data = pickle.load(f)
 
 no_moments = 4
@@ -693,7 +693,7 @@ plt.legend()
 plt.grid()
 plt.xlabel('$L$', fontsize = 15)
 plt.ylabel(r'$\langle s^{k} \rangle$', fontsize = 15)
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3b',dpi=500)
+plt.savefig('~/Complexity&Networks/Oslo model project/3b',dpi=500)
 
 #%%
 '''
@@ -721,4 +721,4 @@ plt.grid()
 plt.legend(fontsize = 15)
 plt.xlabel('$k$', fontsize = 15)
 plt.ylabel(r'$D(1+k-\tau_{s})$', fontsize = 15)
-plt.savefig('/home/adam/Desktop/work/3rd Year/Complexity&Networks/Oslo model project/3bb',dpi=500)
+plt.savefig('~/Complexity&Networks/Oslo model project/3bb',dpi=500)
